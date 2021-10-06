@@ -1,10 +1,11 @@
 import os
-import requests
-from stem import Signal, SocketError
-from stem.control import Controller
-from subprocess import check_output
-from bs4 import BeautifulSoup
-from shutil import copy as copy_file
+
+from libraries.stem.stem import Signal, SocketError
+from libraries.stem.stem.control import Controller
+from libraries.requests import requests
+from libraries.beautifulsoup4.bs4 import BeautifulSoup
+from libraries.subprocess.subprocess import check_output
+from libraries.shutil.shutil import copy as copy_file
 
 
 class TorSession:
