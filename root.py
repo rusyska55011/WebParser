@@ -22,7 +22,7 @@ class TorSession:
         }
         return session
 
-    def receive_session(self) -> object:
+    def receive_session(self) -> requests.session:
         return self.session
 
     def change_session(self):
