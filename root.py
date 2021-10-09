@@ -1,9 +1,10 @@
+# TODO: Добавить bs4 в локальные бибилиотеки
 import os
 
 from libraries.stem.stem import Signal, SocketError
 from libraries.stem.stem.control import Controller
 from libraries.requests import requests
-from libraries.beautifulsoup4.bs4 import BeautifulSoup
+from bs4 import BeautifulSoup #from libraries.beautifulsoup4.bs4 import BeautifulSoup
 from libraries.subprocess.subprocess import check_output
 from libraries.shutil.shutil import copy as copy_file
 
@@ -47,8 +48,9 @@ class TorSession:
                 process = line.split()[0]
             except IndexError:
                 continue
-            if process == b'tor.exe':
-                self.close_tor()
+            else:
+                if process == b'tor.exe':
+                    self.close_tor()
 
         os.startfile(self.tor_path)
 
