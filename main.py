@@ -31,7 +31,11 @@ class DoRequests(TorSession):
         if domain[-1] != '/':
             domain += '/'
 
-        find_scripts = [self.__decode_rule(rule) for rule in rules]
+        decoded = [self.__decode_rule(rule) for rule in rules]
+        find_scripts, getters = list(), list()
+        for find_script, getter in decoded:
+            find_scripts.append(find_script)
+            getters.append(getter)
 
         data = list()
         for _ in find_scripts:
@@ -42,11 +46,12 @@ class DoRequests(TorSession):
             for script_num in range(len(find_scripts)):
                 data_cell = data[script_num]
                 full_script = find_scripts[script_num]
+                this_getter = getters[script_num]
 
                 if len(full_script) == 1:
                     finded = self.parser.find_elements(html, *full_script[0])
                 else:
-                    first_step, *another_steps = full_script
+                    first_step, *another_steps, last_step = full_script
                     finded = self.parser.find_elements(html, *first_step)
 
                     for script in another_steps:
@@ -54,6 +59,8 @@ class DoRequests(TorSession):
                         for item in finded:
                             finded_clone.append(self.parser.find_elements(str(item), *script))
                         finded = finded_clone.copy()
+
+                    finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
                 data_cell.append(finded)
         return data
@@ -99,15 +106,15 @@ class DoRequests(TorSession):
                     item_attributes[attribute_name.strip()] = attribute_property.strip()
                 item_name = tag_name
 
-            nested_tags.append((item_name, item_attributes, getter))
-        return nested_tags
+            nested_tags.append((item_name, item_attributes))
+        return nested_tags, getter
 
 
 requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td(class=rating_list_position)~text', 'div(class=block)>tbody>tr>td(style=text-align:left)'],
+                    rules=['div(class=block)>tbody>tr>td(class=rating_list_position)~text', 'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
                     num_range=[1, 3])
-#print(len(a))
-#for i in a:
-#    print(i)
+print(len(a))
+for i in a:
+    print(i)
