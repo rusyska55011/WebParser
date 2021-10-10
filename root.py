@@ -72,7 +72,7 @@ class Parser:
         return img_url
 
     @staticmethod
-    def find_elements(html: str, tag: str, attribute=None, get='') -> [str]:
+    def find_elements(html: str, tag: str, attribute: dict = None, get: str = None) -> [str]:
         def get_text(finded: str) -> [str]:
             total = list()
             for el in finded:
@@ -102,7 +102,7 @@ class Parser:
             return finded
 
     @staticmethod
-    def find_element(html: str, tag: str, attribute=None, get='') -> str:
+    def find_element(html: str, tag: str, attribute: dict = None, get: str = None) -> str:
         soup = BeautifulSoup(html, 'html.parser')
         finded = soup.find(tag, attribute)
 
