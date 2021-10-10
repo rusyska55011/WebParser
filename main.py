@@ -69,7 +69,7 @@ class DoRequests(TorSession):
             total_item = str(page_number).join(page_elements)
             total.append(total_item)
 
-        return total
+        return tuple(total)
 
     @staticmethod
     def __decode_rule(rule: str) -> [(str, dict, str)]:
