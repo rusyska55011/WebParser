@@ -63,7 +63,7 @@ class DoRequests(TorSession):
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
                 data_cell.append(finded)
-        return data
+        return tuple(data)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
@@ -114,7 +114,7 @@ requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
                     rules=['div(class=block)>tbody>tr>td(class=rating_list_position)~text', 'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
-                    num_range=[1, 3])
+                    num_range=[1, 14])
 print(len(a))
 for i in a:
     print(i)
