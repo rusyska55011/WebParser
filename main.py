@@ -72,18 +72,25 @@ class DoRequests(TorSession):
         return total
 
     @staticmethod
-    def __decode_rule(rule: str) -> [(str, dict)]:
+    def __decode_rule(rule: str) -> [(str, dict, str)]:
+        getter = None
+        if '~' in rule:
+            try:
+                rule, getter = rule.split('~')
+            except ValueError:
+                raise ValueError(f'Кажется, вы поставили лишний знак "~": {rule}')
+
         nested_tags_list = rule.split('>')
-        nested_tags_for_bs4 = list()
+        nested_tags = list()
         for tag_rule in nested_tags_list:
             item_name = tag_rule.strip()
             item_attributes = dict()
 
             if '(' in tag_rule:
                 tag_name, tag_attributes = tag_rule.split('(')
-                if (tag_attributes[-1]) != ')':
+                if not (')' in tag_rule):
                     raise ValueError(f'Кажется, вы не закрыли скобку описания: {tag_rule}')
-                tag_attributes = tag_attributes[:-1]
+                tag_attributes = tag_attributes.split(')')[0]
 
                 tag_attributes_list = tag_attributes.split(',')
 
@@ -92,16 +99,15 @@ class DoRequests(TorSession):
                     item_attributes[attribute_name.strip()] = attribute_property.strip()
                 item_name = tag_name
 
-            nested_tags_for_bs4.append((item_name, item_attributes))
-
-        return nested_tags_for_bs4
+            nested_tags.append((item_name, item_attributes, getter))
+        return nested_tags
 
 
 requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td(class=rating_list_position)', 'div(class=block)>tbody>tr>td(style=text-align:left)'],
+                    rules=['div(class=block)>tbody>tr>td(class=rating_list_position)~text', 'div(class=block)>tbody>tr>td(style=text-align:left)'],
                     num_range=[1, 3])
-print(len(a))
-for i in a:
-    print(i)
+#print(len(a))
+#for i in a:
+#    print(i)
