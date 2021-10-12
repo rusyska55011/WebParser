@@ -37,13 +37,10 @@ class DoRequests(TorSession):
             getters.append(getter)
 
         data = list()
-        for _ in find_scripts:
-            data.append(list())
-
         for url in urls:
             html = self.parser.get_html(self.session, domain + url)
             for script_num in range(len(find_scripts)):
-                data_cell, full_script, this_getter = data[script_num], find_scripts[script_num], getters[script_num]
+                full_script, this_getter = find_scripts[script_num], getters[script_num]
 
                 if len(full_script) == 1:
                     finded = self.parser.find_elements(html, *full_script[0])
@@ -59,8 +56,8 @@ class DoRequests(TorSession):
 
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
-                data_cell.append(finded)
-        return tuple(data)
+                data.append(finded)
+        return data
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
