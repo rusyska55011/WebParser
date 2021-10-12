@@ -60,6 +60,13 @@ class DoRequests(TorSession):
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
                 data_cell.append(finded)
+
+            if (self.session_requests) > 12:
+                self.change_session()
+                self.session = self.receive_session()
+                self.session_requests = 0
+            self.session_requests += 1
+
         return tuple(data)
 
     @staticmethod
