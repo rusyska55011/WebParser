@@ -20,10 +20,9 @@ class DoRequests(TorSession):
         if num_range:
             urls = self.__generate_urls(page, num_range, step)
         else:
-            if not('($)' in page):
-                urls = [page]
-            else:
+            if '($)' in page:
                 raise ValueError('Задано "($)" при отсутвующей итерации')
+            urls = [page]
 
         if not rules:
             raise ValueError('Правило для парсинга не задано')
@@ -44,9 +43,7 @@ class DoRequests(TorSession):
         for url in urls:
             html = self.parser.get_html(self.session, domain + url)
             for script_num in range(len(find_scripts)):
-                data_cell = data[script_num]
-                full_script = find_scripts[script_num]
-                this_getter = getters[script_num]
+                data_cell, full_script, this_getter = data[script_num], find_scripts[script_num], getters[script_num]
 
                 if len(full_script) == 1:
                     finded = self.parser.find_elements(html, *full_script[0])
@@ -67,6 +64,16 @@ class DoRequests(TorSession):
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
+        if not (isinstance(num_range, list) and len(num_range) == 2):
+            raise ValueError(f'{num_range=} является некорректным аргументом. Нужен список из 2 чисел!')
+
+        start, finish = num_range
+        if not (isinstance(start, int) and isinstance(finish, int)):
+            raise ValueError('Значения длинны генерации должны быть целочисленными')
+
+        if start - finish < 1:
+            raise KeyError('Длинна не может быть отрицательной')
+
         if step < 1:
             raise KeyError('Шаг не может быть меньше чем 1')
 
@@ -113,8 +120,11 @@ class DoRequests(TorSession):
 requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td(class=rating_list_position)~text', 'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
-                    num_range=[1, 14])
+                    rules=['div(class=block)>tbody>tr>td'],
+                           #'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
+                    num_range=[3, 0])
 print(len(a))
 for i in a:
     print(i)
+
+
