@@ -37,10 +37,13 @@ class DoRequests(TorSession):
             getters.append(getter)
 
         data = list()
+        for _ in find_scripts:
+            data.append(list())
+
         for url in urls:
             html = self.parser.get_html(self.session, domain + url)
             for script_num in range(len(find_scripts)):
-                full_script, this_getter = find_scripts[script_num], getters[script_num]
+                data_cell, full_script, this_getter = data[script_num], find_scripts[script_num], getters[script_num]
 
                 if len(full_script) == 1:
                     finded = self.parser.find_elements(html, *full_script[0])
@@ -56,8 +59,8 @@ class DoRequests(TorSession):
 
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
-                data.append(finded)
-        return data
+                data_cell.append(finded)
+        return tuple(data)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
@@ -68,7 +71,7 @@ class DoRequests(TorSession):
         if not (isinstance(start, int) and isinstance(finish, int)):
             raise ValueError('Значения длинны генерации должны быть целочисленными')
 
-        if start - finish < 1:
+        if finish - start < 1:
             raise KeyError('Длинна не может быть отрицательной')
 
         if step < 1:
@@ -117,11 +120,13 @@ class DoRequests(TorSession):
 requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td'],
-                           #'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
-                    num_range=[3, 0])
+                    rules=['div(class=block)>tbody>tr>td',
+                           'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
+                    num_range=[0, 4])
 print(len(a))
 for i in a:
+    print('----------------------------------------')
+    print(len(i))
     print(i)
 
 
