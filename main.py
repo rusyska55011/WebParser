@@ -1,9 +1,11 @@
-from root import TorSession, Parser
+from root import TorSession, Parser, File
+from datetime import datetime
 
 
 class DoRequests(TorSession):
     session_requests = 0
     parser = Parser
+    file_manager = File('.\\results')
 
     def __init__(self, tor_path: str):
         super(DoRequests, self).__init__(tor_path)
@@ -34,6 +36,9 @@ class DoRequests(TorSession):
         for _ in find_scripts:
             data.append(list())
 
+        save_dirs = self.__create_save_dir(domain, page)
+        self.file_manager.create_dirs(save_dirs)
+
         for url in urls:
             html = self.parser.get_html(self.session, domain + url)
             for script_num in range(len(find_scripts)):
@@ -53,15 +58,19 @@ class DoRequests(TorSession):
 
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
+                self.__write_data(save_dirs, url, full_script, finded)
                 data_cell.append(finded)
 
-            if (self.session_requests) > 12:
+            if self.session_requests > 12:
                 self.change_session()
                 self.session = self.receive_session()
                 self.session_requests = 0
             self.session_requests += 1
 
         return tuple(data)
+
+    def __write_data(self, dir_path: str, url: list, script: list, finded: list):
+        self.file_manager.append(dir_path + '\\result', f'\n===== {url=} | {script=} =====\n', *finded)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
@@ -117,17 +126,17 @@ class DoRequests(TorSession):
             nested_tags.append((item_name, item_attributes))
         return nested_tags, getter
 
+    @staticmethod
+    def __create_save_dir(domain: str, page: str):
+        return domain.split('//')[1].split('/')[0] + '\\' + page.split('?')[0] + '\\' + str(datetime.now().strftime("%d.%m.%Y %H-%M-%S"))
+
 
 requester = DoRequests('.\\tor\\Tor\\tor.exe')
 a = requester.start(domain='https://technical.city/',
                     page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td',
-                           'div(class=block)>tbody>tr>td(style=text-align:left)>a~href'],
-                    num_range=[0, 4])
-print(len(a))
-for i in a:
-    print('----------------------------------------')
-    print(len(i))
-    print(i)
+                    rules=['div(class=block)>tbody>tr>td(style=text-align:left)>a~href', 'div(class=block)>tbody>tr>td(style=text-align:left)~text'],
+                    num_range=[0, 12])
+
+
 
 
