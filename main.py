@@ -61,13 +61,16 @@ class DoRequests(TorSession):
                 self.__write_data(save_dirs, url, full_script, finded)
                 data_cell.append(finded)
 
-            if self.session_requests > 12:
-                self.change_session()
-                self.session = self.receive_session()
-                self.session_requests = 0
-            self.session_requests += 1
+            self.__check_refresh_moment()
 
         return tuple(data)
+
+    def __check_refresh_moment(self):
+        if self.session_requests > 12:
+            self.change_session()
+            self.session = self.receive_session()
+            self.session_requests = 0
+        self.session_requests += 1
 
     def __write_data(self, dir_path: str, url: list, script: list, finded: list):
         self.file_manager.append(dir_path + '\\result', f'\n===== {url=} | {script=} =====\n', *finded)
