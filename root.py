@@ -138,6 +138,14 @@ class File:
         with open(self.folder_path + path_from_folder, 'w') as file:
             self.__write_data(file, *args)
 
+    def create_dirs(self, path_from_folder: str):
+        if path_from_folder[-1] == '\\':
+            path_from_folder = path_from_folder[:-1]
+        try:
+            os.makedirs(self.folder_path + path_from_folder)
+        except FileExistsError:
+            pass
+
     def read(self, path_from_folder: str) -> tuple:
         with open(self.folder_path + path_from_folder, 'r') as file:
             return self.__delete_n(*file.readlines())
