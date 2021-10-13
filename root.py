@@ -116,3 +116,48 @@ class Parser:
             return finded.get_text().strip() if get == 'text' else finded[str(get)]
         else:
             return finded
+
+
+class File:
+    def __init__(self, folder_path: str = '.\\'):
+        self.folder_path = folder_path
+        if self.folder_path[-1] != '\\':
+            self.folder_path += '\\'
+
+    def __setitem__(self, key, value):
+        self.rewriting(key, *value)
+
+    def __getitem__(self, path_from_folder) -> tuple:
+        return self.read(path_from_folder)
+
+    def append(self, path_from_folder: str, *args: str):
+        with open(self.folder_path + path_from_folder, 'a') as file:
+            self.__write_data(file, *args)
+
+    def rewriting(self, path_from_folder: str, *args: str):
+        with open(self.folder_path + path_from_folder, 'w') as file:
+            self.__write_data(file, *args)
+
+    def read(self, path_from_folder: str) -> tuple:
+        with open(self.folder_path + path_from_folder, 'r') as file:
+            return self.__delete_n(*file.readlines())
+
+    @staticmethod
+    def __write_data(file: open, *args: str):
+        for arg in args:
+            if isinstance(arg, (list, tuple, set, frozenset)):
+                line = str([*arg])
+            else:
+                line = str(arg)
+            file.write(line + '\n')
+
+    @staticmethod
+    def __delete_n(*args: str) -> tuple:
+        data = list()
+        for arg in args:
+            if arg == '\n':
+                arg = ''
+            elif arg[-1] == '\n':
+                arg = arg[:-1]
+            data.append(arg)
+        return tuple(data)
