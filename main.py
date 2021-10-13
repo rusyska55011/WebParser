@@ -10,12 +10,6 @@ class DoRequests(TorSession):
         self.session = self.receive_session()
         self.start_tor()
 
-    def __del__(self):
-        self.close_tor()
-
-    def __str__(self):
-        return 'Объект тора'
-
     def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1) -> tuple:
         if num_range:
             urls = self.__generate_urls(page, num_range, step)
