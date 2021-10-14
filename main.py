@@ -1,5 +1,9 @@
-from root import TorSession, Parser, File
+import os
 from datetime import datetime
+from tkinter import Tk, Label, Button, Listbox, Entry, END
+from threading import Thread
+
+from root import TorSession, Parser, File
 
 
 class DoRequests(TorSession):
@@ -12,7 +16,7 @@ class DoRequests(TorSession):
         self.session = self.receive_session()
         self.start_tor()
 
-    def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1) -> tuple:
+    def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1) -> str:
         if num_range:
             urls = self.__generate_urls(page, num_range, step)
         else:
@@ -63,7 +67,7 @@ class DoRequests(TorSession):
 
             self.__check_refresh_moment()
 
-        return tuple(data)
+        return save_dirs
 
     def __check_refresh_moment(self):
         if self.session_requests > 12:
@@ -73,7 +77,7 @@ class DoRequests(TorSession):
         self.session_requests += 1
 
     def __write_data(self, dir_path: str, url: list, script: list, finded: list):
-        self.file_manager.append(dir_path + '\\result', f'\n===== {url=} | {script=} =====\n', *finded)
+        self.file_manager.append(dir_path + '\\result.txt', f'\n===== {url=} | {script=} =====\n', *finded)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
@@ -84,7 +88,7 @@ class DoRequests(TorSession):
         if not (isinstance(start, int) and isinstance(finish, int)):
             raise ValueError('Значения длинны генерации должны быть целочисленными')
 
-        if finish - start < 1:
+        if finish - start < 0:
             raise KeyError('Длинна не может быть отрицательной')
 
         if step < 1:
@@ -131,15 +135,116 @@ class DoRequests(TorSession):
 
     @staticmethod
     def __create_save_dir(domain: str, page: str):
-        return domain.split('//')[1].split('/')[0] + '\\' + page.split('?')[0] + '\\' + str(datetime.now().strftime("%d.%m.%Y %H-%M-%S"))
+        return domain.split('//')[1].split('/')[0] + '\\' + '\\'.join(page.split('?')[0].split('/')) + '\\' + str(datetime.now().strftime("%d.%m.%Y %H-%M-%S"))
 
 
-requester = DoRequests('.\\tor\\Tor\\tor.exe')
-a = requester.start(domain='https://technical.city/',
-                    page='cpu/rating?pg=($)&sort_field=default&sort_order=up',
-                    rules=['div(class=block)>tbody>tr>td(style=text-align:left)>a~href', 'div(class=block)>tbody>tr>td(style=text-align:left)~text'],
-                    num_range=[0, 12])
+class Interface:
+    h1 = dict(font=("Lucida Grande", 26), bg='#fafafa', padx=30)
+    h2, h2['font'] = h1.copy(), ("Lucida Grande", 18)
+    h3 = dict(font=("Lucida Grande", 13))
+
+    entry_style = dict(font=("Lucida Grande", 12))
+
+    button_style = dict(font=("Lucida Grande", 10), pady=5, padx=5)
+    start_button_style, start_button_style['font'] = button_style.copy(), ("Lucida Grande", 15)
+
+    save_folder = '.\\results'
+
+    def __init__(self, size: [int, int], title: str):
+        self.root = Tk()
+
+        self.root.wm_title(title)
+        self.root.geometry('x'.join(map(lambda item: str(item), size)))
+        self.root.minsize(*size)
+        self.root.maxsize(*size)
+        self.elements()
+
+    def start(self):
+        self.root.mainloop()
+
+    def quit(self):
+        self.root.destroy()
+
+    def elements(self):
+        # Labels
+        self.h1_label = Label(self.root, text='Web-парсер v1.0', **self.h1)
+        self.h1_label.place(x=105, y=7)
+
+        self.listbox_label = Label(self.root, text='Консоль :', **self.h3)
+        self.listbox_label.place(x=10, y=370)
+
+        self.setting_label = Label(self.root, text='Настройки :', **self.h2)
+        self.setting_label.place(x=175, y=60)
+
+        self.domain_label = Label(self.root, text='Домен', **self.h3)
+        self.domain_label.place(x=10, y=107)
+
+        self.urls_label = Label(self.root, text='Страницы', **self.h3)
+        self.urls_label.place(x=10, y=147)
+
+        self.range_label = Label(self.root, text='Генерировать', **self.h3)
+        self.range_label.place(x=342, y=148)
+
+        self.rule_label = Label(self.root, text='Алгоритм', **self.h3)
+        self.rule_label.place(x=10, y=188)
+
+        #ListBoxes
+        self.listbox = Listbox(self.root, width=88, height=11)
+        self.listbox.place(x=9, y=411)
+
+        #Entries
+        self.domain_entry = Entry(self.root, width=49, **self.entry_style)
+        self.domain_entry.place(x=95, y=110)
+
+        self.urls_entry = Entry(self.root, width=27, **self.entry_style)
+        self.urls_entry.place(x=95, y=150)
+
+        self.range_entry = Entry(self.root, width=9, **self.entry_style)
+        self.range_entry.place(x=455, y=150)
+
+        self.rule_entry = Entry(self.root, width=49, **self.entry_style)
+        self.rule_entry.place(x=95, y=190)
+
+        #Buttons
+        self.show_folder_button = Button(self.root, text='Все сохранения', command=self.__open_folder, **self.button_style)
+        self.show_folder_button.place(x=422, y=360)
+
+        self.start_button = Button(self.root, text='Начать парсинг', command=lambda: Thread(target=self.__start_parse).start(), **self.start_button_style)
+        self.start_button.place(x=193, y=235)
+
+    def __open_folder(self):
+        os.startfile(os.path.realpath(self.save_folder))
+
+    def __start_parse(self):
+        domain = self.domain_entry.get()
+        page = self.urls_entry.get()
+        rules = self.rule_entry.get()
+        num_range = self.range_entry.get()
+        step = 1
+
+        rules = list(map(lambda item: item.strip(), rules.split('<AND>')))
+
+        try:
+            num_range = list(map(lambda item: int(item), num_range.split(':')))
+        except ValueError:
+            num_range = None
+        else:
+            if len(num_range) == 3:
+                step = num_range[2]
+                num_range = num_range[0:2]
+            elif len(num_range) == 2:
+                pass
+            else:
+                num_range = None
+
+        self.__append_listbox('Запросы отправляются... Не выключайте программу')
+        dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step)
+        self.__append_listbox(f'Файл сохранен по пути: {dirs}')
+
+    def __append_listbox(self, *data: str):
+        listbox = self.listbox
+        for item in data:
+            listbox.insert(END, str(item))
 
 
-
-
+Interface([550, 600], 'WebParser 1.0').start()
