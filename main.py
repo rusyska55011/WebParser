@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from tkinter import Tk, Label, Button, Listbox, Entry, END
 from threading import Thread
+from time import sleep
 
 from root import TorSession, Parser, File
 
@@ -42,8 +43,8 @@ class DoRequests(TorSession):
 
         save_dirs = self.__create_save_dir(domain, page)
         self.file_manager.create_dirs(save_dirs)
-
         for url in urls:
+            sleep(0.7)
             html = self.parser.get_html(self.session, domain + url)
             for script_num in range(len(find_scripts)):
                 data_cell, full_script, this_getter = data[script_num], find_scripts[script_num], getters[script_num]
@@ -70,7 +71,7 @@ class DoRequests(TorSession):
         return save_dirs
 
     def __check_refresh_moment(self):
-        if self.session_requests > 12:
+        if self.session_requests > 15:
             self.change_session()
             self.session = self.receive_session()
             self.session_requests = 0
