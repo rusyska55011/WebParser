@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from tkinter import Tk, Label, Button, Listbox, Entry, END
+from tkinter import Tk, Label, Button, Listbox, Entry, Checkbutton, IntVar, END
 from threading import Thread
 from time import sleep
 
@@ -17,7 +17,7 @@ class DoRequests(TorSession):
         self.session = self.receive_session()
         self.start_tor()
 
-    def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1) -> str:
+    def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1, mark_request=False) -> str:
         if num_range:
             urls = self.__generate_urls(page, num_range, step)
         else:
@@ -63,7 +63,11 @@ class DoRequests(TorSession):
 
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
-                self.__write_data(save_dirs, script_num, url, full_script, finded)
+                if mark_request:
+                    self.__write_mark_data(save_dirs, script_num, url, full_script, finded)
+                else:
+                    self.__write_data(save_dirs, script_num, finded)
+
                 data_cell.append(finded)
 
             self.__check_refresh_moment()
@@ -77,8 +81,11 @@ class DoRequests(TorSession):
             self.session_requests = 0
         self.session_requests += 1
 
-    def __write_data(self, dir_path: str, script_num: int, url: list, script: list, finded: list):
+    def __write_mark_data(self, dir_path: str, script_num: int, url: list, script: list, finded: list):
         self.file_manager.append(dir_path + f'\\script{script_num + 1}_result.txt', f'\n===== {url=} | {script=} =====\n', *finded)
+
+    def __write_data(self, dir_path: str, script_num: int, finded: list):
+        self.file_manager.append(dir_path + f'\\script{script_num + 1}_result.txt', *finded)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
@@ -206,12 +213,17 @@ class Interface:
         self.rule_entry = Entry(self.root, width=49, **self.entry_style)
         self.rule_entry.place(x=95, y=190)
 
+        #CheckBoxes
+        self.checkbox_value = IntVar()
+        self.checkbox = Checkbutton(self.root, text='Отмечать каждый запрос в файле', variable=self.checkbox_value, onvalue=True, offvalue=False)
+        self.checkbox.place(x=90, y=220)
+
         #Buttons
         self.show_folder_button = Button(self.root, text='Все сохранения', command=lambda: Thread(target=self.__open_folder).start(), **self.button_style)
         self.show_folder_button.place(x=422, y=360)
 
         self.start_button = Button(self.root, text='Начать парсинг', command=lambda: Thread(target=self.__start_parse).start(), **self.start_button_style)
-        self.start_button.place(x=193, y=235)
+        self.start_button.place(x=193, y=255)
 
     def __open_folder(self):
         os.startfile(os.path.realpath(self.save_folder))
@@ -240,7 +252,7 @@ class Interface:
 
         self.__append_listbox(f'({datetime.now().strftime("%H:%M:%S")}) Запросы отправляются... Не выключайте программу')
         try:
-            dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step)
+            dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step, mark_request=bool(self.checkbox_value.get()))
         except (ValueError, IndexError):
             self.__append_listbox('ОШИБКА ВВОДА ДАННЫХ')
             mistakes = list()
