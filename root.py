@@ -157,7 +157,10 @@ class File:
                 line = str([*arg])
             else:
                 line = str(arg)
-            file.write(line + '\n')
+            try:
+                file.write(line + '\n')
+            except UnicodeEncodeError:
+                pass
 
     @staticmethod
     def __delete_n(*args: str) -> tuple:
