@@ -63,7 +63,7 @@ class DoRequests(TorSession):
 
                     finded = self.parser.find_elements(str(finded), *last_step, get=this_getter)
 
-                self.__write_data(save_dirs, url, full_script, finded)
+                self.__write_data(save_dirs, script_num, url, full_script, finded)
                 data_cell.append(finded)
 
             self.__check_refresh_moment()
@@ -77,8 +77,8 @@ class DoRequests(TorSession):
             self.session_requests = 0
         self.session_requests += 1
 
-    def __write_data(self, dir_path: str, url: list, script: list, finded: list):
-        self.file_manager.append(dir_path + '\\result.txt', f'\n===== {url=} | {script=} =====\n', *finded)
+    def __write_data(self, dir_path: str, script_num: int, url: list, script: list, finded: list):
+        self.file_manager.append(dir_path + f'\\script{script_num + 1}_result.txt', f'\n===== {url=} | {script=} =====\n', *finded)
 
     @staticmethod
     def __generate_urls(page: str, num_range: [int, int] = None, step: int = 1) -> tuple:
