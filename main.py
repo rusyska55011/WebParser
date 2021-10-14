@@ -238,9 +238,35 @@ class Interface:
             else:
                 num_range = None
 
-        self.__append_listbox('Запросы отправляются... Не выключайте программу')
-        dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step)
-        self.__append_listbox(f'Файл сохранен по пути: {dirs}')
+        self.__append_listbox(f'({datetime.now().strftime("%H:%M:%S")}) Запросы отправляются... Не выключайте программу')
+        try:
+            dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step)
+        except (ValueError, IndexError):
+            self.__append_listbox('ОШИБКА ВВОДА ДАННЫХ')
+            mistakes = list()
+            if not domain:
+                mistakes.append('- Вы не ввели domain')
+            if not page:
+                mistakes.append('- Вы не ввели page')
+            if not rules[0]:
+                mistakes.append('- Алгоритм не задан')
+            if not num_range:
+                if '($)' in page:
+                    mistakes.append('- Вы задали "($)", но не указали генерацию')
+
+            if isinstance(num_range, (list, tuple)):
+                if not((len(num_range) == 2) or (not num_range)):
+                    mistakes.append('- Некорректные данные для генератора')
+            elif num_range != None:
+                mistakes.append('- Некорректные данные для генератора')
+
+            if not mistakes:
+                mistakes.append(f'Не удалось получить данные с ресурса {domain}. Проверьте коректность введенных данных')
+
+            self.__append_listbox(*mistakes)
+
+        else:
+            self.__append_listbox(f'Файл сохранен по пути: {dirs}')
 
     def __append_listbox(self, *data: str):
         listbox = self.listbox
