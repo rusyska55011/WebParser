@@ -254,14 +254,8 @@ class Interface:
                 if '($)' in page:
                     mistakes.append('- Вы задали "($)", но не указали генерацию')
 
-            if isinstance(num_range, (list, tuple)):
-                if not((len(num_range) == 2) or (not num_range)):
-                    mistakes.append('- Некорректные данные для генератора')
-            elif num_range != None:
-                mistakes.append('- Некорректные данные для генератора')
-
             if not mistakes:
-                mistakes.append(f'Не удалось получить данные с ресурса {domain}. Проверьте коректность введенных данных')
+                mistakes.append(f'Не удалось получить данные с ресурса {domain}. Проверьте корректность введенных данных')
 
             self.__append_listbox(*mistakes)
 
