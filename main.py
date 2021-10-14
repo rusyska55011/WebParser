@@ -223,7 +223,7 @@ class Interface:
         num_range = self.range_entry.get()
         step = 1
 
-        rules = list(map(lambda item: item.strip(), rules.split('<AND>')))
+        rules = list(map(lambda item: item.strip(), rules.split('&&')))
 
         try:
             num_range = list(map(lambda item: int(item), num_range.split(':')))
