@@ -206,7 +206,7 @@ class Interface:
         self.rule_entry.place(x=95, y=190)
 
         #Buttons
-        self.show_folder_button = Button(self.root, text='Все сохранения', command=self.__open_folder, **self.button_style)
+        self.show_folder_button = Button(self.root, text='Все сохранения', command=lambda: Thread(target=self.__open_folder).start(), **self.button_style)
         self.show_folder_button.place(x=422, y=360)
 
         self.start_button = Button(self.root, text='Начать парсинг', command=lambda: Thread(target=self.__start_parse).start(), **self.start_button_style)
