@@ -267,10 +267,12 @@ class Interface:
                     mistakes.append('- Вы задали "($)", но не указали генерацию')
 
             if not mistakes:
-                mistakes.append(f'Не удалось получить данные с ресурса {domain}. Проверьте корректность введенных данных')
+                mistakes.append(f'Не удалось получить данные с ресурса {domain}.')
+                mistakes.append('Проверьте корректность введенных данных')
 
             self.__append_listbox(*mistakes)
-
+        except:
+            self.__append_listbox(f'Не удалось получить данные с ресурса {domain}.', 'Проверьте корректность введенных данных')
         else:
             self.__append_listbox(f'Файл сохранен по пути: {dirs}')
 
