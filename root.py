@@ -1,12 +1,12 @@
 # TODO: Добавить bs4 в локальные бибилиотеки
 import os
 
-from libraries.stem.stem import Signal, SocketError
-from libraries.stem.stem.control import Controller
-from libraries.requests import requests
-from bs4 import BeautifulSoup #from libraries.beautifulsoup4.bs4 import BeautifulSoup
-from libraries.subprocess.subprocess import check_output
-from libraries.shutil.shutil import copy as copy_file
+from stem import Signal, SocketError
+from stem.control import Controller
+import requests
+from bs4 import BeautifulSoup
+from subprocess import check_output
+from shutil import copy as copy_file
 
 
 class TorSession:

@@ -1,5 +1,0 @@
-Directory
-=========
-
-.. automodule:: stem.directory
-

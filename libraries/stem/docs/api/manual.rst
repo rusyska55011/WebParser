@@ -1,5 +1,0 @@
-Manual
-======
-
-.. automodule:: stem.manual
-
