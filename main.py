@@ -15,8 +15,10 @@ class DoRequests(TorSession):
     def __init__(self, tor_path: str):
         super(DoRequests, self).__init__(tor_path)
         self.session = self.receive_session()
-        self.setup_controller()
         self.start_tor()
+
+    def __del__(self):
+        self.close_tor()
 
     def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1, mark_request=False) -> str:
         if num_range:

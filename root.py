@@ -14,9 +14,6 @@ class TorSession:
         self.tor_path = tor_path
         self.session = self.__create_session()
 
-    def __del__(self):
-        self.close_tor()
-
     def __str__(self):
         return 'Объект тора'
 
