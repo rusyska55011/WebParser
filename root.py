@@ -1,4 +1,3 @@
-# TODO: Добавить bs4 в локальные бибилиотеки
 import os
 
 from stem import Signal, SocketError
