@@ -44,6 +44,9 @@ class DoRequests(TorSession):
         for _ in find_scripts:
             data.append(list())
 
+        self.change_session()
+        self.session = self.receive_session()
+
         save_dirs = self.__create_save_dir(domain, page)
         self.file_manager.create_dirs(save_dirs)
         for url in urls:
