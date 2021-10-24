@@ -62,17 +62,28 @@ class TorSession:
 
 class Parser:
     @staticmethod
-    def get_html(session: TorSession.receive_session, link: str) -> str:
-        return session.get(link).text
+    def get_html(session: TorSession.receive_session, url: str, headers: dict = None) -> str:
+        if headers and isinstance(headers, dict):
+            return session.get(url, headers=headers).text
+        return session.get(url).text
 
     @staticmethod
-    def get_img(session: TorSession.receive_session, img_link: str, save_folder: str) -> str:
-        img = session.get(img_link)
-        img_url = save_folder + img_link.split('/')[-1]
+    def get_img(session: TorSession.receive_session, img_url: str, save_folder: str, headers: dict = None) -> str:
+        if headers and isinstance(headers, dict):
+            img = session.get(img_url, headers=headers)
+        else:
+            img = session.get(img_url)
+        img_url = save_folder + img_url.split('/')[-1]
         with open(img_url, 'wb') as file:
             file.write(img.content)
         return img_url
 
+    @staticmethod
+    def send_post(session: TorSession.receive_session, url: str, data: dict, headers: dict = None):
+        if headers and isinstance(headers, dict):
+            return session.post(url, data=data, headers=headers)
+        return session.post(url, data=data)
+    
     @staticmethod
     def find_elements(html: str, tag: str, attribute: dict = None, get: str = None) -> [str]:
         def get_text(finded: str) -> [str]:
