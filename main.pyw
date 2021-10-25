@@ -1,4 +1,5 @@
 import os
+from ast import literal_eval
 from datetime import datetime
 from tkinter import Tk, Label, Button, Listbox, Entry, Checkbutton, IntVar, END
 from threading import Thread
@@ -20,7 +21,27 @@ class DoRequests(TorSession):
     def __del__(self):
         self.close_tor()
 
-    def start(self, domain: str, page: str, rules: [str], num_range: [int, int] = None, step: int = 1, mark_request=False) -> str:
+    def do_auth(self, domain: str, page: str, data: dict) -> str:
+        if isinstance(data, str):
+            data = literal_eval(data)
+
+        if domain[-1] != '/':
+            domain += '/'
+
+        url = domain + page
+        req = self.parser.send_post(self.session, url, data)
+        return req.text
+
+    def start(self, domain: str, page: str, rules: [str],
+              num_range: [int, int] = None, step: int = 1, mark_request=False,
+              auth_page: str = None, auth_data: dict = None) -> str:
+
+        auth = False
+        if auth_page:
+            if not auth_data:
+                raise ValueError('Страница авторизации задана, но JSON не задан')
+            auth = True
+
         if num_range:
             urls = self.__generate_urls(page, num_range, step)
         else:
@@ -46,6 +67,8 @@ class DoRequests(TorSession):
 
         self.change_session()
         self.session = self.receive_session()
+        if auth:
+            self.do_auth(domain=domain, page=auth_page, data=auth_data)
 
         save_dirs = self.__create_save_dir(domain, page)
         self.file_manager.create_dirs(save_dirs)
@@ -76,16 +99,15 @@ class DoRequests(TorSession):
 
                 data_cell.append(finded)
 
-            self.__check_refresh_moment()
+            if self.session_requests > 12:
+                self.change_session()
+                self.session = self.receive_session()
+                if auth:
+                    self.do_auth(domain=domain, page=auth_page, data=auth_data)
+                self.session_requests = 0
+            self.session_requests += 1
 
         return save_dirs
-
-    def __check_refresh_moment(self):
-        if self.session_requests > 15:
-            self.change_session()
-            self.session = self.receive_session()
-            self.session_requests = 0
-        self.session_requests += 1
 
     def __write_mark_data(self, dir_path: str, script_num: int, url: list, script: list, finded: list):
         self.file_manager.append(dir_path + f'\\script{script_num + 1}_result.txt', f'\n===== {url=} | {script=} =====\n', *finded)
@@ -165,6 +187,8 @@ class Interface:
     save_folder = '.\\results'
 
     def __init__(self, size: [int, int], title: str):
+        self.title = title
+
         self.root = Tk()
 
         self.root.wm_title(title)
@@ -181,7 +205,7 @@ class Interface:
 
     def elements(self):
         # Labels
-        self.h1_label = Label(self.root, text='Web-парсер v1.0', **self.h1)
+        self.h1_label = Label(self.root, text=self.title, **self.h1)
         self.h1_label.place(x=105, y=7)
 
         self.listbox_label = Label(self.root, text='Консоль :', **self.h3)
@@ -202,6 +226,12 @@ class Interface:
         self.rule_label = Label(self.root, text='Алгоритм', **self.h3)
         self.rule_label.place(x=10, y=188)
 
+        self.auth_label = Label(self.root, text='Авторизация', font=("Lucida Grande", 10))
+        self.auth_label.place(x=10, y=229)
+
+        self.json_label = Label(self.root, text='JSON', **self.h3)
+        self.json_label.place(x=235, y=228)
+
         #ListBoxes
         self.listbox = Listbox(self.root, width=88, height=11)
         self.listbox.place(x=9, y=411)
@@ -219,17 +249,23 @@ class Interface:
         self.rule_entry = Entry(self.root, width=49, **self.entry_style)
         self.rule_entry.place(x=95, y=190)
 
+        self.auth_entry = Entry(self.root, width=15, **self.entry_style)
+        self.auth_entry.place(x=95, y=230)
+
+        self.json_entry = Entry(self.root, width=28, **self.entry_style)
+        self.json_entry.place(x=285, y=230)
+
         #CheckBoxes
         self.checkbox_value = IntVar()
         self.checkbox = Checkbutton(self.root, text='Отмечать каждый запрос в файле', variable=self.checkbox_value, onvalue=True, offvalue=False)
-        self.checkbox.place(x=90, y=220)
+        self.checkbox.place(x=90, y=265)
 
         #Buttons
         self.show_folder_button = Button(self.root, text='Все сохранения', command=lambda: Thread(target=self.__open_folder).start(), **self.button_style)
         self.show_folder_button.place(x=422, y=360)
 
         self.start_button = Button(self.root, text='Начать парсинг', command=lambda: Thread(target=self.__start_parse).start(), **self.start_button_style)
-        self.start_button.place(x=193, y=255)
+        self.start_button.place(x=193, y=300)
 
     def __open_folder(self):
         os.startfile(os.path.realpath(self.save_folder))
@@ -242,6 +278,9 @@ class Interface:
         step = 1
 
         rules = list(map(lambda item: item.strip(), rules.split('&&')))
+
+        auth_page = self.auth_entry.get()
+        auth_data = self.json_entry.get()
 
         try:
             num_range = list(map(lambda item: int(item), num_range.split(':')))
@@ -257,8 +296,12 @@ class Interface:
                 num_range = None
 
         self.__append_listbox(f'({datetime.now().strftime("%H:%M:%S")}) Запросы отправляются... Не выключайте программу')
+
+        requester = DoRequests('.\\tor\\Tor\\tor.exe')
         try:
-            dirs = DoRequests('.\\tor\\Tor\\tor.exe').start(domain=domain, page=page, rules=rules, num_range=num_range, step=step, mark_request=bool(self.checkbox_value.get()))
+            dirs = requester.start(domain=domain, page=page, rules=rules,
+                                   num_range=num_range, step=step, mark_request=bool(self.checkbox_value.get()),
+                                   auth_page=auth_page, auth_data=auth_data)
         except (ValueError, IndexError):
             self.__append_listbox('ОШИБКА ВВОДА ДАННЫХ')
             mistakes = list()
@@ -288,4 +331,4 @@ class Interface:
             listbox.insert(END, str(item))
 
 
-Interface([550, 600], 'WebParser 1.0').start()
+Interface([550, 600], 'Web-парсер v2.0').start()
