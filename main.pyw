@@ -314,6 +314,9 @@ class Interface:
             if not num_range:
                 if '($)' in page:
                     mistakes.append('- Вы задали "($)", но не указали генерацию')
+            if auth_page:
+                if not auth_data:
+                    mistakes.append('- Вы указали ссылку на отправку POST запроса, но не указали JSON')
 
             if not mistakes:
                 mistakes.append(f'Не удалось получить данные с ресурса {domain}.')
